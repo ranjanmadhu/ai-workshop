@@ -1,3 +1,1 @@
-(function AI() {
-    document.getElementById('user').innerHTML = 'AI';
-})();
+document.getElementById('user').innerHTML = 'AI';
