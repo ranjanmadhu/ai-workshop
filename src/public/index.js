@@ -42,10 +42,32 @@ function responseSetter() {
     return { set };
 }
 
-function chat(query, api, responseSetter) {
+function setLoader() {
+    const chatBox = document.getElementById('chatBox');
+    const loader = document.createElement('div');
+    loader.className = 'loader';
+    chatBox.appendChild(loader);
+    chatBox.scrollTop = chatBox.scrollHeight;
+}
 
+function removeLoader() {
+    const chatBox = document.getElementById('chatBox');
+    const loader = document.querySelector('.loader');
+    chatBox.removeChild(loader);
+}
+
+function chat(query, api, responseSetter) {
+    setLoader();
+    setTimeout(() => {
+        removeLoader();
+        responseSetter.set('chat response');
+    }, 1000);
 }
 
 function streamingChat(query, api, responseSetter) {
-
+    setLoader();
+    setTimeout(() => {
+        removeLoader();
+        responseSetter.set('streaming chat response');
+    }, 1000);
 }
