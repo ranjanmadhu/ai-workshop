@@ -20,6 +20,7 @@ function sendMessage(type) {
         userMessage.textContent = userInput.value;
         chatBox.appendChild(userMessage);
 
+        showProgressBar();
         // Clear input
         userInput.value = '';
         const _responseSetter = responseSetter();
@@ -42,32 +43,26 @@ function responseSetter() {
     return { set };
 }
 
-function setLoader() {
-    const chatBox = document.getElementById('chatBox');
-    const loader = document.createElement('div');
-    loader.className = 'loader';
-    chatBox.appendChild(loader);
-    chatBox.scrollTop = chatBox.scrollHeight;
+function showProgressBar() {
+    const progressBar = document.querySelector('.progress-bar');
+    progressBar.style.display = 'block';
 }
 
-function removeLoader() {
-    const chatBox = document.getElementById('chatBox');
-    const loader = document.querySelector('.loader');
-    chatBox.removeChild(loader);
+function hideProgressBar() {
+    const progressBar = document.querySelector('.progress-bar');
+    progressBar.style.display = 'none';
 }
 
 function chat(query, api, responseSetter) {
-    setLoader();
     setTimeout(() => {
-        removeLoader();
+        hideProgressBar();
         responseSetter.set('chat response');
     }, 1000);
 }
 
 function streamingChat(query, api, responseSetter) {
-    setLoader();
     setTimeout(() => {
-        removeLoader();
+        hideProgressBar();
         responseSetter.set('streaming chat response');
     }, 1000);
 }
