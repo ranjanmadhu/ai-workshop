@@ -1,22 +1,40 @@
-const functionMap = {
-    'llm': { func: chat, cssClass: 'llm', api: '' },
-    'llm-streaming': { func: streamingChat, cssClass: 'llm-streaming', api: '' },
-    'llm-doc': { func: streamingChat, cssClass: 'llm-doc', api: '' },
-    'llm-image': { func: streamingChat, cssClass: 'llm-image', api: '' },
-    'llm-kb': { func: chat, cssClass: 'llm-kb', api: '' },
-    'llm-kb-streaming': { func: streamingChat, cssClass: 'llm-kb-streaming', api: '' },
-    'agent': { func: chat, cssClass: 'agent', api: '' },
-};
+const featureMap = [
+    { type: 'chat', func: chat, api: '', cssClass: 'chat', name: 'Chat' },
+    { type: 'chat', func: streamingChat, api: '', cssClass: 'chat-streaming', name: 'Chat with Streaming' },
+    { type: 'chat', func: chat, api: '', cssClass: 'chat-kb', name: 'Chat with Knowledge Base' },
+    { type: 'chat', func: streamingChat, api: '', cssClass: 'chat-kb-streaming', name: 'Chat with Knowledge Base Streaming' },
+    { type: 'agent', func: streamingChat, api: '', cssClass: 'agent-ka', name: 'Agent - Kitchen Assistant' },
+    { type: 'agent', func: streamingChat, api: '', cssClass: 'agent-sac', name: 'Agent - Safe Agile Coach' },
+    { type: 'agent', func: streamingChat, api: '', cssClass: 'agent-ia', name: 'Agent - Insight Architect' },
+    { type: 'agent', func: streamingChat, api: '', cssClass: 'agent-ft', name: 'Agent - Function\Tools' }
+];
 
-function sendMessage(type) {
+(function init() {
+    const chatBtns = document.getElementById('chat-btns');
+    const agentBtns = document.getElementById('agent-btns');
+
+    featureMap.forEach((feature) => {
+        const btn = document.createElement('button');
+        btn.className = `btn ${feature.cssClass}`;
+        btn.textContent = feature.name;
+        btn.onclick = () => sendMessage(feature);
+        if (feature.type === 'chat') {
+            chatBtns.appendChild(btn);
+        } else {
+            agentBtns.appendChild(btn);
+        }
+    });
+})();
+
+function sendMessage(feature) {
     const userInput = document.getElementById('userInput');
     const chatBox = document.getElementById('chatBox');
-    const _function = functionMap[type];
+
     const userInputText = userInput.value.trim();
     if (userInputText !== "") {
         // Append user message
         const userMessage = document.createElement('div');
-        userMessage.className = `message user ${_function.cssClass}`;
+        userMessage.className = `message user ${feature.cssClass}`;
         userMessage.textContent = userInput.value;
         chatBox.appendChild(userMessage);
 
@@ -24,7 +42,7 @@ function sendMessage(type) {
         // Clear input
         userInput.value = '';
         const _responseSetter = responseSetter();
-        _function.func(userInputText, _function.api, _responseSetter);
+        feature.func(userInputText, feature.api, _responseSetter);
         chatBox.scrollTop = chatBox.scrollHeight;
     }
 }

@@ -18,22 +18,15 @@
         <div class="action-area">
             <div class="file-selector">
                 <label for="jpegFile">Select an Image : </label>
-                <input type="file" id="jpegFile" accept="image/jpeg">
+                <input type="file" id="jpegFile" accept="image/jpeg, image/png">
             </div>
             <div class="file-selector">
                 <label for="docFile">Select a document:</label>
                 <input type="file" id="docFile" accept="application/pdf, application/vnd.openxmlformats-officedocument.wordprocessingml.document">
             </div>
         </div>
-        <div class="action-area">
-            <button class="llm" onclick="sendMessage('llm')">Chat (LLM)</button>
-            <button class="llm-streaming" onclick="sendMessage('llm-streaming')">Chat (LLM Streaming)</button>
-            <button class="lm-doc" onclick="sendMessage('llm-doc')">Chat (With document)</button>
-            <button class="llm-image" onclick="sendMessage('llm-image')">Chat (With Image)</button>
-            <button class="llm-kb" onclick="sendMessage('llm-kb')">Chat (Knowledge Base)</button>
-            <button class="llm-kb-streaming" onclick="sendMessage('llm-kb-streaming')">Chat (Knowledge Base Streaming)</button>
-            <button class="agent" onclick="sendMessage('agent')">Chat (Agent with Function\Tool)</button>
-        </div>
+        <div class="action-area" id="chat-btns" > </div>
+        <div class="action-area" id="agent-btns" > </div>
     </div>
     <script src="index.js"></script>
 </body>
