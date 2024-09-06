@@ -3,7 +3,7 @@ const functionMap = {
     'llm-streaming': { func: streamingChat, cssClass: 'llm-streaming', api: '' },
     'llm-doc': { func: streamingChat, cssClass: 'llm-doc', api: '' },
     'llm-image': { func: streamingChat, cssClass: 'llm-image', api: '' },
-    'llm-kb': { func: chat, class: 'llm-kb', api: '' },
+    'llm-kb': { func: chat, cssClass: 'llm-kb', api: '' },
     'llm-kb-streaming': { func: streamingChat, cssClass: 'llm-kb-streaming', api: '' },
     'agent': { func: chat, cssClass: 'agent', api: '' },
 };
