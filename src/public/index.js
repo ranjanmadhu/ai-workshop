@@ -3,7 +3,7 @@ const functionMap = {
     'llm-streaming': { func: streamingChat, cssClass: 'llm-streaming', api: '' },
     'llm-doc': { func: streamingChat, cssClass: 'llm-doc', api: '' },
     'llm-image': { func: streamingChat, cssClass: 'llm-image', api: '' },
-    'llm-kb': { func: chat, class: 'llm-kb', api: '' },
+    'llm-kb': { func: chat, cssClass: 'llm-kb', api: '' },
     'llm-kb-streaming': { func: streamingChat, cssClass: 'llm-kb-streaming', api: '' },
     'agent': { func: chat, cssClass: 'agent', api: '' },
 };
@@ -20,6 +20,7 @@ function sendMessage(type) {
         userMessage.textContent = userInput.value;
         chatBox.appendChild(userMessage);
 
+        showProgressBar();
         // Clear input
         userInput.value = '';
         const _responseSetter = responseSetter();
@@ -42,10 +43,26 @@ function responseSetter() {
     return { set };
 }
 
-function chat(query, api, responseSetter) {
+function showProgressBar() {
+    const progressBar = document.querySelector('.progress-bar');
+    progressBar.style.display = 'block';
+}
 
+function hideProgressBar() {
+    const progressBar = document.querySelector('.progress-bar');
+    progressBar.style.display = 'none';
+}
+
+function chat(query, api, responseSetter) {
+    setTimeout(() => {
+        hideProgressBar();
+        responseSetter.set('chat response');
+    }, 1000);
 }
 
 function streamingChat(query, api, responseSetter) {
-
+    setTimeout(() => {
+        hideProgressBar();
+        responseSetter.set('streaming chat response');
+    }, 1000);
 }
