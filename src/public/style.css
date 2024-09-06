@@ -31,6 +31,7 @@ body {
 
 .chat-box .message.user {
     align-self: flex-end;
+    color: white;
 }
 
 .chat-box .message.bot {
@@ -48,7 +49,7 @@ textarea {
     resize: none;
 }
 
-.action-area{
+.action-area {
     display: flex;
     justify-content: center;
     align-items: center;
@@ -88,41 +89,45 @@ button:hover {
     cursor: pointer;
 }
 
-.llm {
+.file-container {
+    display: flex;
+    flex-direction: row;
+    align-items: center;
+    padding: 10px;
+    border-bottom: 1px solid #ddd;
+}
+
+.chat {
     background-color: #FF5733;
-    color: #fff;
 }
 
-.llm-streaming {
+.chat-streaming {
     background-color: #28A745;
-    color: #fff;
 }
 
-.llm-doc {
+.chat-kb {
     background-color: #007BFF;
-    color: #fff;
 }
 
-.llm-image {
+.chat-kb-streaming {
     background-color: #FFC107;
-    color: #fff;
 }
 
-.llm-kb {
+.agent-ka {
     background-color: #6F42C1;
-    color: #fff;
 }
 
-.llm-kb-streaming {
+.agent-sac {
     background-color: #20C997;
-    color: #fff;
 }
 
-.agent {
-    background-color: #FD7E14;
-    color: #fff;
+.agent-ia {
+    background-color: #ff9c33;
 }
 
+.agent-ft {
+    background-color: #9620c9d2;
+}
 
 .progress-bar {
     width: 100%;
@@ -147,10 +152,12 @@ button:hover {
         left: -100%;
         width: 100%;
     }
+
     50% {
         left: 0%;
         width: 100%;
     }
+
     100% {
         left: 100%;
         width: 100%;
