@@ -3,9 +3,9 @@ const featureMap = [
     { type: 'chat', func: streamingChat, api: '/api/llmstreaming', cssClass: 'chat-streaming', name: 'Chat with Streaming' },
     { type: 'chat', func: chat, api: '/api/kbchat', cssClass: 'chat-kb', name: 'Chat with Knowledge Base' },
     { type: 'chat', func: streamingChat, api: '/api/kbchatstreaming', cssClass: 'chat-kb-streaming', name: 'Chat with Knowledge Base Streaming' },
-    { type: 'agent', func: streamingChat, api: '', cssClass: 'agent-ka', name: 'Agent - Kitchen Assistant' },
-    { type: 'agent', func: streamingChat, api: '', cssClass: 'agent-sac', name: 'Agent - Safe Agile Coach' },
-    { type: 'agent', func: streamingChat, api: '', cssClass: 'agent-ia', name: 'Agent - Insight Architect' },
+    { type: 'agent', func: streamingChat, api: '/api/llmstreaming', cssClass: 'agent-ka', name: 'Agent - Kitchen Assistant', agent: 'kitchen_assistant' },
+    { type: 'agent', func: streamingChat, api: '/api/llmstreaming', cssClass: 'agent-sac', name: 'Agent - Safe Agile Coach', agent: 'safe_agile_coach' },
+    { type: 'agent', func: streamingChat, api: '/api/llmstreaming', cssClass: 'agent-ia', name: 'Agent - Insight Architect', agent: 'insight_architect' },
     { type: 'agent', func: streamingChat, api: '', cssClass: 'agent-ft', name: 'Agent - Function\Tools' }
 ];
 
@@ -47,7 +47,7 @@ async function sendMessage(feature) {
         // Clear input
         userInput.value = '';
         const _responseSetter = responseSetter();
-        feature.func(userInputText, feature.api, _responseSetter, imageFile, docFile);
+        feature.func(userInputText, feature.api, _responseSetter, imageFile, docFile, feature.agent);
         
         document.getElementById('jpegFile').value = '';
         document.getElementById('docFile').value = '';
@@ -150,7 +150,7 @@ function chat(query, api, responseSetter) {
         });
 }
 
-function streamingChat(query, api, responseSetter, imageFile, docFile) {
+function streamingChat(query, api, responseSetter, imageFile, docFile, agent) {
     const formData = new FormData();
     formData.append('query', query);
 
@@ -160,6 +160,10 @@ function streamingChat(query, api, responseSetter, imageFile, docFile) {
 
     if (docFile) {
         formData.append('docFile', docFile);
+    }
+
+    if (agent) {
+        formData.append('agent', agent);
     }
 
     fetch(api, {

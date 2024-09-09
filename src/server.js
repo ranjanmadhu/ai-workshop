@@ -85,13 +85,30 @@ async function chatWithLLM(query) {
 }
 
 app.post('/api/llmstreaming', uploadFields, async (req, res) => {
-    const { query } = req.body;
+    const { query, agent } = req.body;
 
     const imageFile = req.files['imageFile'] ? req.files['imageFile'][0] : null;
     const docFile = req.files['docFile'] ? req.files['docFile'][0] : null;
 
     try {
-        const _response = await chatWithLLMStreaming(query, imageFile, docFile);
+        let systemPrompt = null;
+        if (agent) {
+            switch (agent) {
+                case 'kitchen_assistant':
+                    systemPrompt = prompts.kitchen_assistant;
+                    break;
+                case 'insight_architect':
+                    systemPrompt = prompts.insight_architect;
+                    break;
+                case 'safe_agile_coach':
+                    systemPrompt = prompts.safe_agile_coach;
+                    break;
+                default:
+                    break;
+            }
+        }
+
+        const _response = await chatWithLLMStreaming(query, imageFile, docFile, null, systemPrompt);
         streamingResponse(res, _response);
     } catch (error) {
         console.error(error);
