@@ -1,11 +1,19 @@
 import express from 'express';
-import { resolve } from 'path';
+import { resolve, extname } from 'path';
 import { config } from 'dotenv';
 import { BedrockRuntimeClient, ConverseCommand, ConverseStreamCommand } from "@aws-sdk/client-bedrock-runtime";
+import multer from 'multer';
 
 // Load environment variables from .env file
 config();
 
+// Configure multer for file uploads
+const storage = multer.memoryStorage();
+const upload = multer({ storage: storage });
+const uploadFields = upload.fields([
+    { name: 'imageFile', maxCount: 1 },
+    { name: 'docFile', maxCount: 1 }
+]);
 
 // Variables
 const app = express();
@@ -71,11 +79,13 @@ async function chatWithLLM(query) {
     return response?.output?.message?.content[0]?.text || 'could not get response';
 }
 
-app.post('/api/llmstreaming', async (req, res) => {
+app.post('/api/llmstreaming', uploadFields, async (req, res) => {
     const { query } = req.body;
 
+    const imageFile = req.files['imageFile'] ? req.files['imageFile'][0] : null;
+
     try {
-        const _response = await chatWithLLMStreaming(query);
+        const _response = await chatWithLLMStreaming(query, imageFile);
         streamingResponse(res, _response);
     } catch (error) {
         console.error(error);
@@ -108,9 +118,9 @@ async function streamingResponse(res, _response) {
     }
 }
 
-async function chatWithLLMStreaming(query) {
+async function chatWithLLMStreaming(query, imageFile) {
     const client = new BedrockRuntimeClient(awsConfig);
-    console.log(query);
+
     const input = {
         modelId: llm_id,
         messages: [
@@ -123,6 +133,19 @@ async function chatWithLLMStreaming(query) {
                 ]
             }
         ]
+    }
+
+    if (imageFile) {
+        // get the file extension
+        const fileExtension = extname(imageFile.originalname);
+        input.messages[0].content.push({
+            "image": {
+                "format": fileExtension.slice(1),
+                "source": {
+                    "bytes": imageFile.buffer
+                }
+            }
+        });
     }
 
     const command = new ConverseStreamCommand(input);

@@ -38,11 +38,13 @@ function sendMessage(feature) {
         userMessage.textContent = userInput.value;
         chatBox.appendChild(userMessage);
 
+        const imageFile = document.getElementById('jpegFile').files ? document.getElementById('jpegFile').files[0] : null;
+        
         showProgressBar();
         // Clear input
         userInput.value = '';
         const _responseSetter = responseSetter();
-        feature.func(userInputText, feature.api, _responseSetter);
+        feature.func(userInputText, feature.api, _responseSetter, imageFile);
         chatBox.scrollTop = chatBox.scrollHeight;
     }
 }
@@ -90,15 +92,17 @@ function chat(query, api, responseSetter) {
         });
 }
 
-function streamingChat(query, api, responseSetter) {
-    const data = { query: query };
+function streamingChat(query, api, responseSetter, imageFile) {
+    const formData = new FormData();
+    formData.append('query', query);
+
+    if (imageFile) {
+        formData.append('imageFile', imageFile);
+    }
 
     fetch(api, {
         method: 'POST',
-        headers: {
-            'Content-Type': 'application/json'
-        },
-        body: JSON.stringify(data)
+        body: formData
     })
         .then(response => {
             const reader = response.body.getReader();
