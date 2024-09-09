@@ -1,6 +1,6 @@
 const featureMap = [
     { type: 'chat', func: chat, api: '/api/llm', cssClass: 'chat', name: 'Chat' },
-    { type: 'chat', func: streamingChat, api: '', cssClass: 'chat-streaming', name: 'Chat with Streaming' },
+    { type: 'chat', func: streamingChat, api: '/api/llmstreaming', cssClass: 'chat-streaming', name: 'Chat with Streaming' },
     { type: 'chat', func: chat, api: '', cssClass: 'chat-kb', name: 'Chat with Knowledge Base' },
     { type: 'chat', func: streamingChat, api: '', cssClass: 'chat-kb-streaming', name: 'Chat with Knowledge Base Streaming' },
     { type: 'agent', func: streamingChat, api: '', cssClass: 'agent-ka', name: 'Agent - Kitchen Assistant' },
@@ -91,8 +91,38 @@ function chat(query, api, responseSetter) {
 }
 
 function streamingChat(query, api, responseSetter) {
-    setTimeout(() => {
-        hideProgressBar();
-        responseSetter.set('streaming chat response');
-    }, 1000);
+    const data = { query: query };
+
+    fetch(api, {
+        method: 'POST',
+        headers: {
+            'Content-Type': 'application/json'
+        },
+        body: JSON.stringify(data)
+    })
+        .then(response => {
+            const reader = response.body.getReader();
+            const decoder = new TextDecoder();
+
+            return new ReadableStream({
+                start(controller) {
+                    function push() {
+                        reader.read().then(({ done, value }) => {
+                            if (done) {
+                                controller.close();
+                                hideProgressBar();
+                                return;
+                            }
+                            const chunk = decoder.decode(value, { stream: true });
+                            responseSetter.set(chunk);
+                            push();
+                        });
+                    }
+                    push();
+                }
+            });
+        })
+        .catch(error => {
+            console.error('Error:', error);
+        });
 }
