@@ -37,7 +37,7 @@ const awsConfig = {
 const llm_id = 'anthropic.claude-3-5-sonnet-20240620-v1:0';
 
 // Add Knowledge Base ID
-const knowledgeBaseId = 'O3GLCJHUSQ';
+const knowledgeBaseId = process.env.KB_ID;
 
 // Serve static files from the 'public' directory
 app.use(express.static(('./src/public/')));
