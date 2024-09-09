@@ -1,7 +1,7 @@
 const featureMap = [
     { type: 'chat', func: chat, api: '/api/llm', cssClass: 'chat', name: 'Chat' },
     { type: 'chat', func: streamingChat, api: '/api/llmstreaming', cssClass: 'chat-streaming', name: 'Chat with Streaming' },
-    { type: 'chat', func: chat, api: '', cssClass: 'chat-kb', name: 'Chat with Knowledge Base' },
+    { type: 'chat', func: chat, api: '/api/kbchat', cssClass: 'chat-kb', name: 'Chat with Knowledge Base' },
     { type: 'chat', func: streamingChat, api: '', cssClass: 'chat-kb-streaming', name: 'Chat with Knowledge Base Streaming' },
     { type: 'agent', func: streamingChat, api: '', cssClass: 'agent-ka', name: 'Agent - Kitchen Assistant' },
     { type: 'agent', func: streamingChat, api: '', cssClass: 'agent-sac', name: 'Agent - Safe Agile Coach' },

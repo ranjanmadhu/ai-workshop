@@ -2,6 +2,7 @@ import express from 'express';
 import { resolve, extname } from 'path';
 import { config } from 'dotenv';
 import { BedrockRuntimeClient, ConverseCommand, ConverseStreamCommand } from "@aws-sdk/client-bedrock-runtime";
+import { BedrockAgentRuntimeClient, RetrieveAndGenerateType, RetrieveAndGenerateCommand } from "@aws-sdk/client-bedrock-agent-runtime";
 import multer from 'multer';
 
 // Load environment variables from .env file
@@ -33,6 +34,9 @@ const awsConfig = {
 
 // Define Large Language Model Id
 const llm_id = 'anthropic.claude-3-5-sonnet-20240620-v1:0';
+
+// Add Knowledge Base ID
+const knowledgeBaseId = process.env.KB_ID;
 
 // Serve static files from the 'public' directory
 app.use(express.static(('./src/public/')));
@@ -172,6 +176,31 @@ async function chatWithLLMStreaming(query, imageFile, docFile) {
     const command = new ConverseStreamCommand(input);
     const response = await client.send(command);
     return response;
+}
+
+app.post('/api/kbchat', async (req, res) => {
+    const { query } = req.body;
+    const _response = await chatWithKB(query);
+    res.status(200).json({ message: _response });
+});
+
+async function chatWithKB(query) {
+    const client = new BedrockAgentRuntimeClient(awsConfig);
+
+    let payload = {
+        input: { text: query },
+        retrieveAndGenerateConfiguration: {
+            type: RetrieveAndGenerateType.KNOWLEDGE_BASE,
+            knowledgeBaseConfiguration: {
+                knowledgeBaseId: knowledgeBaseId,
+                modelArn: llm_id,
+            }
+        }
+    };
+
+    const invokeCommand = new RetrieveAndGenerateCommand(payload);
+    const response = await client.send(invokeCommand);
+    return response.output?.text;
 }
 
 app.listen(port, () => {
