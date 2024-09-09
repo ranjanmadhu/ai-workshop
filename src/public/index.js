@@ -26,7 +26,7 @@ const featureMap = [
     });
 })();
 
-function sendMessage(feature) {
+async function sendMessage(feature) {
     const userInput = document.getElementById('userInput');
     const chatBox = document.getElementById('chatBox');
 
@@ -40,6 +40,7 @@ function sendMessage(feature) {
 
         const imageFile = document.getElementById('jpegFile').files ? document.getElementById('jpegFile').files[0] : null;
         
+        await displayImage(imageFile);
         showProgressBar();
         // Clear input
         userInput.value = '';
@@ -47,6 +48,25 @@ function sendMessage(feature) {
         feature.func(userInputText, feature.api, _responseSetter, imageFile);
         chatBox.scrollTop = chatBox.scrollHeight;
     }
+}
+
+displayImage = function (imageFile) {
+    return new Promise((resolve, reject) => {
+        if (imageFile) {
+            const reader = new FileReader();
+            reader.onload = async function (e) {
+                const img = document.createElement('img');
+                img.src = e.target.result;
+                img.style.maxWidth = '100%';
+                img.style.height = 'auto';
+                chatBox.appendChild(img);
+                resolve();
+            };
+            reader.readAsDataURL(imageFile);
+        } else {
+            resolve();
+        }
+    });
 }
 
 function responseSetter() {
