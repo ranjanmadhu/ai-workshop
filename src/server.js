@@ -2,7 +2,7 @@ import express from 'express';
 import { resolve, extname } from 'path';
 import { config } from 'dotenv';
 import { BedrockRuntimeClient, ConverseCommand, ConverseStreamCommand } from "@aws-sdk/client-bedrock-runtime";
-import { BedrockAgentRuntimeClient, RetrieveAndGenerateType, RetrieveAndGenerateCommand, RetrieveCommand } from "@aws-sdk/client-bedrock-agent-runtime";
+import { BedrockAgentRuntimeClient, RetrieveAndGenerateType, RetrieveAndGenerateCommand, RetrieveCommand, InvokeAgentCommand } from "@aws-sdk/client-bedrock-agent-runtime";
 import multer from 'multer';
 import prompts from './prompts.js';
 
@@ -38,6 +38,10 @@ const llm_id = 'anthropic.claude-3-5-sonnet-20240620-v1:0';
 
 // Add Knowledge Base ID
 const knowledgeBaseId = process.env.KB_ID;
+
+// Add Agent ID and Alias ID
+const agentId = process.env.AGENT_ID;
+const agentAliasId = process.env.AGENT_ALIAS_ID;
 
 // Serve static files from the 'public' directory
 app.use(express.static(('./src/public/')));
@@ -263,6 +267,49 @@ async function chatWithKBStreaming(query) {
 
     // Generate response using LLM
     return await chatWithLLMStreaming(query, null, null, context, prompts.knowledgebase);
+}
+
+app.post('/api/agent', uploadFields, async (req, res) => {
+    const { query, sessionId } = req.body;
+    const _response = await chatWithAgent(query, sessionId);
+
+    res.setHeader('Content-Type', 'text/event-stream');
+    res.setHeader('Cache-Control', 'no-cache');
+    res.setHeader('Connection', 'keep-alive');
+
+    // Function to send data to the client
+    const sendData = (data) => {
+        res.write(data);
+    };
+
+    try {
+        for await (let chunkEvent of _response.completion) {
+            const chunk = chunkEvent.chunk;
+            const decodedResponse = new TextDecoder("utf-8").decode(chunk.bytes);
+            sendData(decodedResponse);
+        }
+
+        res.end();
+    } catch (error) {
+        console.error(error);
+        res.status(500).json({ error: 'Streaming error' });
+    }
+});
+
+async function chatWithAgent(query, sessionId) {
+    const client = new BedrockAgentRuntimeClient(awsConfig);
+
+    const payload = {
+        agentId: agentId, 
+        agentAliasId: agentAliasId, 
+        sessionId: sessionId,
+        endSession: false,
+        enableTrace: false,
+        inputText: query,
+    };
+
+    const command = new InvokeAgentCommand(payload);
+    return await client.send(command);
 }
 
 app.listen(port, () => {
