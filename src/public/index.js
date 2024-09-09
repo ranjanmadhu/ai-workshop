@@ -26,7 +26,7 @@ const featureMap = [
     });
 })();
 
-function sendMessage(feature) {
+async function sendMessage(feature) {
     const userInput = document.getElementById('userInput');
     const chatBox = document.getElementById('chatBox');
 
@@ -38,13 +38,35 @@ function sendMessage(feature) {
         userMessage.textContent = userInput.value;
         chatBox.appendChild(userMessage);
 
+        const imageFile = document.getElementById('jpegFile').files ? document.getElementById('jpegFile').files[0] : null;
+        
+        await displayImage(imageFile);
         showProgressBar();
         // Clear input
         userInput.value = '';
         const _responseSetter = responseSetter();
-        feature.func(userInputText, feature.api, _responseSetter);
+        feature.func(userInputText, feature.api, _responseSetter, imageFile);
         chatBox.scrollTop = chatBox.scrollHeight;
     }
+}
+
+displayImage = function (imageFile) {
+    return new Promise((resolve, reject) => {
+        if (imageFile) {
+            const reader = new FileReader();
+            reader.onload = async function (e) {
+                const img = document.createElement('img');
+                img.src = e.target.result;
+                img.style.maxWidth = '100%';
+                img.style.height = 'auto';
+                chatBox.appendChild(img);
+                resolve();
+            };
+            reader.readAsDataURL(imageFile);
+        } else {
+            resolve();
+        }
+    });
 }
 
 function responseSetter() {
@@ -90,15 +112,17 @@ function chat(query, api, responseSetter) {
         });
 }
 
-function streamingChat(query, api, responseSetter) {
-    const data = { query: query };
+function streamingChat(query, api, responseSetter, imageFile) {
+    const formData = new FormData();
+    formData.append('query', query);
+
+    if (imageFile) {
+        formData.append('imageFile', imageFile);
+    }
 
     fetch(api, {
         method: 'POST',
-        headers: {
-            'Content-Type': 'application/json'
-        },
-        body: JSON.stringify(data)
+        body: formData
     })
         .then(response => {
             const reader = response.body.getReader();
