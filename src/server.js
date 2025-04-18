@@ -2,8 +2,9 @@ import express from 'express';
 import { resolve, extname } from 'path';
 import { config } from 'dotenv';
 import { BedrockRuntimeClient, ConverseCommand, ConverseStreamCommand } from "@aws-sdk/client-bedrock-runtime";
-import { BedrockAgentRuntimeClient, RetrieveAndGenerateType, RetrieveAndGenerateCommand } from "@aws-sdk/client-bedrock-agent-runtime";
+import { BedrockAgentRuntimeClient, RetrieveAndGenerateType, RetrieveAndGenerateCommand, RetrieveCommand } from "@aws-sdk/client-bedrock-agent-runtime";
 import multer from 'multer';
+import prompts from './prompts.js';
 
 // Load environment variables from .env file
 config();
@@ -123,7 +124,7 @@ async function streamingResponse(res, _response) {
     }
 }
 
-async function chatWithLLMStreaming(query, imageFile, docFile) {
+async function chatWithLLMStreaming(query, imageFile, docFile, retrievdContext, systemPrompt) {
     const client = new BedrockRuntimeClient(awsConfig);
 
     const input = {
@@ -173,6 +174,18 @@ async function chatWithLLMStreaming(query, imageFile, docFile) {
         );
     }
 
+    if (retrievdContext) {
+        input.messages[0].content.push({ text: retrievdContext })
+    }
+
+    if (systemPrompt) {
+        input['system'] = [
+            {
+                "text": systemPrompt
+            }
+        ]
+    }
+
     const command = new ConverseStreamCommand(input);
     const response = await client.send(command);
     return response;
@@ -201,6 +214,38 @@ async function chatWithKB(query) {
     const invokeCommand = new RetrieveAndGenerateCommand(payload);
     const response = await client.send(invokeCommand);
     return response.output?.text;
+}
+
+// Add streaming route
+app.post('/api/kbchatstreaming', uploadFields, async (req, res) => {
+    const { query } = req.body;
+    const _response = await chatWithKBStreaming(query);
+    streamingResponse(res, _response);
+});
+
+async function chatWithKBStreaming(query) {
+    // Retrieve results from knowledge base
+    const client = new BedrockAgentRuntimeClient(awsConfig);
+
+    const payload = {
+        retrievalQuery: { text: query },
+        knowledgeBaseId: knowledgeBaseId
+    };
+
+    const invokeCommand = new RetrieveCommand(payload);
+    const response = await client.send(invokeCommand);
+
+    // Parse result into a context
+    let context = 'Documents: ';
+    response?.retrievalResults?.forEach(async (result) => {
+        context = context.concat(`\n\n\n${result?.content?.text}`);
+    });
+
+    // add safe guard
+    context = context.concat('\n\n\n Remember, you should be a responsible AI assistant and should not generate harmful or misleading content!');
+
+    // Generate response using LLM
+    return await chatWithLLMStreaming(query, null, null, context, prompts.knowledgebase);
 }
 
 app.listen(port, () => {
