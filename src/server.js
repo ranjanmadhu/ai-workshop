@@ -1,7 +1,7 @@
 import express from 'express';
-import { resolve }  from 'path';
+import { resolve } from 'path';
 import { config } from 'dotenv';
-import { BedrockRuntimeClient, ConverseCommand } from "@aws-sdk/client-bedrock-runtime";
+import { BedrockRuntimeClient, ConverseCommand, ConverseStreamCommand } from "@aws-sdk/client-bedrock-runtime";
 
 // Load environment variables from .env file
 config();
@@ -69,6 +69,65 @@ async function chatWithLLM(query) {
     const response = await client.send(command);
     // console.log(JSON.stringify(response, null, 2));
     return response?.output?.message?.content[0]?.text || 'could not get response';
+}
+
+app.post('/api/llmstreaming', async (req, res) => {
+    const { query } = req.body;
+
+    try {
+        const _response = await chatWithLLMStreaming(query);
+        streamingResponse(res, _response);
+    } catch (error) {
+        console.error(error);
+        res.status(500).json({ error: 'Streaming error' });
+    }
+});
+
+async function streamingResponse(res, _response) {
+    res.setHeader('Content-Type', 'text/event-stream');
+    res.setHeader('Cache-Control', 'no-cache');
+    res.setHeader('Connection', 'keep-alive');
+
+    // Function to send data to the client
+    const sendData = (data) => {
+        res.write(data);
+    };
+
+    try {
+        for await (const item of _response.stream) {
+            if (item.contentBlockDelta) {
+                const text = item.contentBlockDelta.delta?.text;
+                sendData(text);
+            }
+        }
+
+        res.end();
+    } catch (error) {
+        console.error(error);
+        res.status(500).json({ error: 'Streaming error' });
+    }
+}
+
+async function chatWithLLMStreaming(query) {
+    const client = new BedrockRuntimeClient(awsConfig);
+    console.log(query);
+    const input = {
+        modelId: llm_id,
+        messages: [
+            {
+                role: 'user',
+                content: [
+                    {
+                        text: query
+                    }
+                ]
+            }
+        ]
+    }
+
+    const command = new ConverseStreamCommand(input);
+    const response = await client.send(command);
+    return response;
 }
 
 app.listen(port, () => {
