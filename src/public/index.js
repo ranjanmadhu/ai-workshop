@@ -1,5 +1,5 @@
 const featureMap = [
-    { type: 'chat', func: chat, api: '', cssClass: 'chat', name: 'Chat' },
+    { type: 'chat', func: chat, api: '/api/llm', cssClass: 'chat', name: 'Chat' },
     { type: 'chat', func: streamingChat, api: '', cssClass: 'chat-streaming', name: 'Chat with Streaming' },
     { type: 'chat', func: chat, api: '', cssClass: 'chat-kb', name: 'Chat with Knowledge Base' },
     { type: 'chat', func: streamingChat, api: '', cssClass: 'chat-kb-streaming', name: 'Chat with Knowledge Base Streaming' },
@@ -55,7 +55,7 @@ function responseSetter() {
     let value = '';
     function set(response) {
         value += response;
-        botMessage.innerHTML = value;
+        botMessage.innerHTML = marked.parse(value);
         chatBox.scrollTop = chatBox.scrollHeight;
     }
     return { set };
@@ -72,10 +72,22 @@ function hideProgressBar() {
 }
 
 function chat(query, api, responseSetter) {
-    setTimeout(() => {
-        hideProgressBar();
-        responseSetter.set('chat response');
-    }, 1000);
+    const data = { query: query };
+    fetch(api, {
+        method: 'POST',
+        headers: {
+            'Content-Type': 'application/json'
+        },
+        body: JSON.stringify(data)
+    })
+        .then(response => response.json())
+        .then(data => {
+            responseSetter.set(data?.message);
+            hideProgressBar();
+        })
+        .catch((error) => {
+            console.error('Error:', error);
+        });
 }
 
 function streamingChat(query, api, responseSetter) {
