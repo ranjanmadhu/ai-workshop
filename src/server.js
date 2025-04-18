@@ -83,9 +83,10 @@ app.post('/api/llmstreaming', uploadFields, async (req, res) => {
     const { query } = req.body;
 
     const imageFile = req.files['imageFile'] ? req.files['imageFile'][0] : null;
+    const docFile = req.files['docFile'] ? req.files['docFile'][0] : null;
 
     try {
-        const _response = await chatWithLLMStreaming(query, imageFile);
+        const _response = await chatWithLLMStreaming(query, imageFile, docFile);
         streamingResponse(res, _response);
     } catch (error) {
         console.error(error);
@@ -118,7 +119,7 @@ async function streamingResponse(res, _response) {
     }
 }
 
-async function chatWithLLMStreaming(query, imageFile) {
+async function chatWithLLMStreaming(query, imageFile, docFile) {
     const client = new BedrockRuntimeClient(awsConfig);
 
     const input = {
@@ -146,6 +147,26 @@ async function chatWithLLMStreaming(query, imageFile) {
                 }
             }
         });
+    }
+
+    if (docFile) {
+        const fileExtension = extname(docFile.originalname);
+
+        // currently sonnet 3.5 does not support document input
+        const haikuModelId = 'anthropic.claude-3-haiku-20240307-v1:0';
+        input.modelId = haikuModelId;
+
+        input.messages[0].content.push(
+            {
+                "document": {
+                    "format": fileExtension.slice(1),
+                    "name": "string",
+                    "source": {
+                        "bytes": docFile.buffer
+                    }
+                }
+            }
+        );
     }
 
     const command = new ConverseStreamCommand(input);

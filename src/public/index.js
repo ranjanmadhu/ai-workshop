@@ -39,13 +39,18 @@ async function sendMessage(feature) {
         chatBox.appendChild(userMessage);
 
         const imageFile = document.getElementById('jpegFile').files ? document.getElementById('jpegFile').files[0] : null;
-        
+        const docFile = document.getElementById('docFile').files ? document.getElementById('docFile').files[0] : null;
+
         await displayImage(imageFile);
+        await displayDocument(docFile);
         showProgressBar();
         // Clear input
         userInput.value = '';
         const _responseSetter = responseSetter();
-        feature.func(userInputText, feature.api, _responseSetter, imageFile);
+        feature.func(userInputText, feature.api, _responseSetter, imageFile, docFile);
+        
+        document.getElementById('jpegFile').value = '';
+        document.getElementById('docFile').value = '';
         chatBox.scrollTop = chatBox.scrollHeight;
     }
 }
@@ -63,6 +68,39 @@ displayImage = function (imageFile) {
                 resolve();
             };
             reader.readAsDataURL(imageFile);
+        } else {
+            resolve();
+        }
+    });
+}
+
+async function displayDocument(docFile) {
+    return new Promise((resolve, reject) => {
+        if (docFile) {
+            const reader = new FileReader();
+            reader.onload = function (e) {
+                const link = document.createElement('a');
+                link.href = e.target.result;
+                link.textContent = docFile.name;
+                link.download = docFile.name;
+
+                const icon = document.createElement('img');
+                icon.src = './file-icon.png';
+                icon.alt = 'File Icon';
+                icon.style.width = '32px';
+                icon.style.height = '32px';
+                icon.style.marginRight = '8px';
+
+                const container = document.createElement('div');
+                container.className = 'file-container';
+                container.appendChild(icon);
+                container.appendChild(link);
+
+                chatBox.appendChild(container);
+
+                resolve();
+            };
+            reader.readAsDataURL(docFile);
         } else {
             resolve();
         }
@@ -112,12 +150,16 @@ function chat(query, api, responseSetter) {
         });
 }
 
-function streamingChat(query, api, responseSetter, imageFile) {
+function streamingChat(query, api, responseSetter, imageFile, docFile) {
     const formData = new FormData();
     formData.append('query', query);
 
     if (imageFile) {
         formData.append('imageFile', imageFile);
+    }
+
+    if (docFile) {
+        formData.append('docFile', docFile);
     }
 
     fetch(api, {
