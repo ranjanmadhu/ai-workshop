@@ -6,7 +6,7 @@ const featureMap = [
     { type: 'agent', func: streamingChat, api: '/api/llmstreaming', cssClass: 'agent-ka', name: 'Agent - Kitchen Assistant', agent: 'kitchen_assistant' },
     { type: 'agent', func: streamingChat, api: '/api/llmstreaming', cssClass: 'agent-sac', name: 'Agent - Safe Agile Coach', agent: 'safe_agile_coach' },
     { type: 'agent', func: streamingChat, api: '/api/llmstreaming', cssClass: 'agent-ia', name: 'Agent - Insight Architect', agent: 'insight_architect' },
-    { type: 'agent', func: streamingChat, api: '', cssClass: 'agent-ft', name: 'Agent - Function\Tools' }
+    { type: 'agent', func: streamingChat, api: '/api/agent', cssClass: 'agent-ft', name: 'Agent - Function\\\Tools', requireSession: true }
 ];
 
 (function init() {
@@ -47,8 +47,8 @@ async function sendMessage(feature) {
         // Clear input
         userInput.value = '';
         const _responseSetter = responseSetter();
-        feature.func(userInputText, feature.api, _responseSetter, imageFile, docFile, feature.agent);
-        
+        feature.func(userInputText, feature.api, _responseSetter, imageFile, docFile, feature.agent, feature.requireSession);
+
         document.getElementById('jpegFile').value = '';
         document.getElementById('docFile').value = '';
         chatBox.scrollTop = chatBox.scrollHeight;
@@ -150,7 +150,7 @@ function chat(query, api, responseSetter) {
         });
 }
 
-function streamingChat(query, api, responseSetter, imageFile, docFile, agent) {
+function streamingChat(query, api, responseSetter, imageFile, docFile, agent, requireSession) {
     const formData = new FormData();
     formData.append('query', query);
 
@@ -164,6 +164,10 @@ function streamingChat(query, api, responseSetter, imageFile, docFile, agent) {
 
     if (agent) {
         formData.append('agent', agent);
+    }
+
+    if (requireSession) {
+        formData.append('sessionId', 123456);
     }
 
     fetch(api, {
