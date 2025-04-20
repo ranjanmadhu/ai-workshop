@@ -12,16 +12,16 @@ This task focuses on setting up the initial project environment by cloning the r
 git clone https://github.com/ranjanmadhu/ai-workshop.git
 ```
 
-checkout intial branch.
-
-```bash
-git checkout 1c4e705
-```
-
 ### 2. Navigate to the Project Directory
 
 ```bash
 cd ai-workshop
+```
+
+checkout intial branch.
+
+```bash
+git checkout 1c4e705
 ```
 
 ### 3. Install Dependencies
